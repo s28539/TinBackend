@@ -28,7 +28,8 @@ namespace restAPI.Controllers
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
             var users = await _authRepository.GetUsers();
-            var user = users.FirstOrDefault(u => u.Id == loginDto.Username && u.Password == loginDto.Password);
+            Console.WriteLine(users.ToArray().ToString());
+            var user = users.FirstOrDefault(u => ( loginDto.Username.Equals(u.Email)) && u.Password == loginDto.Password);
             if (user == null) return Unauthorized("Invalid credentials");
 
             var token = GenerateJwtToken(user); 
