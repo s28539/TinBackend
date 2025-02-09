@@ -11,12 +11,12 @@ public class AuthRepository : IAuthRepository
         _configuration = configuration;
     }
     
-    public async Task<bool> AddRaportToAcceptByAdmin(RegisterDto registerDto)
+    public async Task<string> AddRaportToAcceptByAdmin(RegisterDto registerDto)
 {
     EmployeesRepository employeesRepository = new EmployeesRepository(_configuration);
     RaportRepository raportRepository = new RaportRepository(_configuration);
 
-    if (!await employeesRepository.DoesEmployeeExist(registerDto.CardID)) return false;
+    if (!await employeesRepository.DoesEmployeeExist(registerDto.CardID)) return "Brak takiego użytkownika!";
     EmployeeDto employee = await employeesRepository.EmployeeDetails(registerDto.CardID);
     var ID = await raportRepository.GetMaxIDRaport();
     ID += 1;
@@ -55,13 +55,13 @@ public class AuthRepository : IAuthRepository
         await command3.ExecuteNonQueryAsync();
 
         await transaction.CommitAsync(); 
-        return true;
+        return "Użytkownik dodany, czekaj na akceptacje profilu przez admina!";
     }
     catch (Exception ex)
     {
         await transaction.RollbackAsync(); 
         Console.WriteLine($"An error occurred: {ex.Message}");
-        return false;
+        return "Błąd przy dodawaniu użytkownika";
     }
 }
 
@@ -93,7 +93,7 @@ public class AuthRepository : IAuthRepository
     public async Task<List<User>> GetUsers()
     {
         List<User> users = new List<User>();
-        var query = "SELECT employee_id, password, role.description FROM employee INNER JOIN role ON role.id = employee.role_id WHERE online_active = true;";
+        var query = "SELECT employee_id, password, role.description,email FROM employee INNER JOIN role ON role.id = employee.role_id WHERE online_active = true;";
 
         try
         {
@@ -110,8 +110,9 @@ public class AuthRepository : IAuthRepository
                 var user = new User
                 {
                     Id = reader.GetInt64(0),
-                    Password = reader.GetString(1), 
-                    Role = reader.GetString(2) 
+                    Password = reader.GetString(1),
+                    Role = reader.GetString(2),
+                    Email = reader.GetString(3) 
                 };
                 users.Add(user);
             }
